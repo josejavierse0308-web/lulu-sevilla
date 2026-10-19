@@ -1,0 +1,197 @@
+@import 'tailwindcss';
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Identidad compartida con la página de Lulu Sevilla. Los tonos claros de la
+   marca (lavanda, salvia) se usan como fondos; para texto se usan versiones
+   más oscuras del mismo tono que cumplen contraste AA (≥ 4.5:1).
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  --font-serif: 'Instrument Serif', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-sans: 'Hanken Grotesk Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --color-hueso: #f2eee8;
+  --color-superficie: #fbf9f6;
+  --color-crema: #e9e1d3;
+  --color-tinta: #25262c;
+  --color-tenue: #5f5a54;
+  --color-linea: rgb(37 38 44 / 0.12);
+  --color-linea-fuerte: rgb(37 38 44 / 0.22);
+  --color-noche: #141821;
+
+  --color-lavanda: #d9d3e8;
+  --color-lavanda-50: #eeebf5;
+  --color-lavanda-700: #5b5182;
+  --color-salvia: #a3b39d;
+  --color-salvia-50: #e4ebe1;
+  --color-salvia-700: #46603f;
+  --color-ocre-50: #f3e7cf;
+  --color-ocre-700: #7a5a1c;
+  --color-rosa-50: #f3e0e1;
+  --color-rosa-700: #8a3f45;
+  --color-pizarra-50: #e3e7ec;
+  --color-pizarra-700: #4a5562;
+  --color-luz: #f5d9a8;
+
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --radius-pill: 999px;
+}
+
+@layer base {
+  html {
+    background: var(--color-hueso);
+    -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+  body {
+    background: var(--color-hueso);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* El mismo grano delicado de la página, más tenue para no distraer. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-lavanda-700);
+    outline-offset: 3px;
+    border-radius: 10px;
+  }
+  ::selection {
+    background: var(--color-lavanda);
+  }
+  input, select, textarea, button {
+    font: inherit;
+    color: inherit;
+  }
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  .display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.02;
+  }
+  .field {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--color-linea-fuerte);
+    background: var(--color-superficie);
+    padding: 10px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field:hover {
+    border-color: rgb(37 38 44 / 0.35);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-lavanda-700);
+    box-shadow: 0 0 0 3px rgb(91 81 130 / 0.18);
+  }
+  .field[aria-invalid='true'] {
+    border-color: var(--color-rosa-700);
+  }
+  .field::placeholder {
+    color: #6f6962;
+  }
+  textarea.field {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+  select.field {
+    appearance: none;
+    padding-right: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2325262C' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  .panel {
+    background: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: 20px;
+  }
+  .rule {
+    border-top: 1px solid var(--color-linea);
+  }
+  .link {
+    color: var(--color-lavanda-700);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .link:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.aparecer {
+  animation: aparecer 0.6s var(--ease-out-quint) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  body::after,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .panel {
+    border-color: #ccc;
+  }
+}
+
+/* Modo discreto: difumina el contenido clínico si alguien más puede ver la pantalla. */
+[data-discreto] .clinico {
+  filter: blur(7px);
+  transition: filter 0.25s;
+}
+[data-discreto] .clinico:hover,
+[data-discreto] .clinico:focus-within {
+  filter: none;
+}
+@media print {
+  [data-discreto] .clinico {
+    filter: none;
+  }
+}

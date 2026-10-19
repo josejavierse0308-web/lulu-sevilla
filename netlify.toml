@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# El adaptador oficial de Netlify para Next.js (se instala solo, pero lo
+# declaramos para fijar el comportamiento).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Función programada que procesa confirmaciones y recordatorios cada 10 minutos.
+[functions."notificaciones"]
+  schedule = "*/10 * * * *"

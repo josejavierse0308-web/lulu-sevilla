@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+.netlify/
+*.tsbuildinfo
+next-env.d.ts
+
+# Variables de entorno: nunca se suben al repositorio
+.env
+.env.local
+.env.*.local
+
+# Respaldos locales de la base de datos (pueden contener datos sensibles)
+respaldos/
+*.dump
+*.sql.gz

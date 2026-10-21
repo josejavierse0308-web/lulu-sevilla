@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { Tone } from '@/lib/labels';
+import { Icon, type IconName } from '@/components/icons';
+import { ScrollActiveIntoView } from '@/components/scroll-active';
 
 type BtnVariant = 'primary' | 'secondary' | 'quiet' | 'danger';
 type BtnSize = 'md' | 'sm';
@@ -42,15 +44,18 @@ export function PageHeader({
   title,
   subtitle,
   actions,
+  actionsClassName = '',
   back,
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
+  /** Por ejemplo `max-md:hidden` cuando en el celular la acción es el botón flotante. */
+  actionsClassName?: string;
   back?: { href: string; label: string };
 }) {
   return (
-    <header className="mb-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-4 sm:mb-8">
       <div className="min-w-0">
         {back && (
           <Link href={back.href} className="mb-3 inline-flex min-h-9 items-center gap-1.5 text-[14px] text-tenue hover:text-tinta">
@@ -60,7 +65,7 @@ export function PageHeader({
         <h1 className="display text-[clamp(34px,6vw,52px)]">{title}</h1>
         {subtitle && <div className="mt-2 text-[15px] text-tenue">{subtitle}</div>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div className={`flex flex-wrap gap-2 max-sm:w-full ${actionsClassName}`}>{actions}</div>}
     </header>
   );
 }
@@ -111,12 +116,59 @@ export function KeyValue({ items }: { items: Array<[string, React.ReactNode]> })
   return (
     <dl className="divide-y divide-linea">
       {items.map(([k, v]) => (
-        <div key={k} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[minmax(150px,1fr)_2fr] sm:gap-4">
+        <div key={k} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-baseline gap-3 py-3 sm:grid-cols-[minmax(150px,1fr)_2fr] sm:gap-4">
           <dt className="text-[14px] text-tenue">{k}</dt>
           <dd className="min-w-0 break-words text-[15px]">{v ?? <span className="text-tenue">—</span>}</dd>
         </div>
       ))}
     </dl>
+  );
+}
+
+/**
+ * Accesos directos para comunicarse con el paciente (llamar, WhatsApp, correo).
+ * En el celular abren directamente la app correspondiente.
+ */
+export function ContactActions({ phone, whatsapp, email, className = '' }: { phone?: string | null; whatsapp?: string | null; email?: string | null; className?: string }) {
+  const tel = phone ? phone.replace(/[^\d+]/g, '') : '';
+  const items = [
+    tel && { href: `tel:${tel}`, label: 'Llamar', icon: 'telefono' as const, external: false },
+    whatsapp && { href: `https://wa.me/${whatsapp}`, label: 'WhatsApp', icon: 'mensaje' as const, external: true },
+    email && { href: `mailto:${email}`, label: 'Correo', icon: 'correo' as const, external: false },
+  ].filter(Boolean) as Array<{ href: string; label: string; icon: IconName; external: boolean }>;
+  if (!items.length) return null;
+  return (
+    <ul className={`no-print grid gap-2 ${className}`} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }} aria-label="Contactar">
+      {items.map((it) => (
+        <li key={it.label}>
+          <a
+            href={it.href}
+            {...(it.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-2xl border border-linea bg-superficie px-2 text-[13.5px] transition-[background-color,transform] duration-200 hover:bg-white active:scale-[0.97] sm:min-h-12 sm:flex-row sm:gap-2 sm:text-[14.5px]"
+          >
+            <Icon name={it.icon} className="size-[22px] text-lavanda-700 sm:size-5" />
+            {it.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Acción principal flotante, solo en el celular (queda sobre la barra inferior,
+ * al alcance del pulgar). En pantallas grandes la acción vive en el encabezado.
+ */
+export function Fab({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="no-print fixed right-4 z-30 inline-flex min-h-[52px] items-center gap-2 rounded-full bg-[linear-gradient(180deg,#3a3c46,#24252c)] pl-4 pr-5 text-[15px] font-medium text-[#f6f3ee] shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_14px_30px_-10px_rgb(30_28_45/0.7)] transition-transform duration-200 ease-[var(--ease-out-quint)] active:scale-[0.96] md:hidden"
+      style={{ bottom: 'calc(env(safe-area-inset-bottom) + 76px)' }}
+    >
+      <Icon name="mas" className="size-[22px]" />
+      {label}
+    </Link>
   );
 }
 
@@ -127,7 +179,11 @@ export function Notice({ tone = 'neutro', children }: { tone?: Tone; children: R
 /** Pestañas como enlaces (funcionan sin JavaScript y con teclado). */
 export function Tabs({ items, current }: { items: Array<{ key: string; label: string; href: string; count?: number }>; current: string }) {
   return (
-    <nav aria-label="Secciones" className="no-print -mx-1 mb-6 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+    <nav
+      aria-label="Secciones"
+      className="no-print relative -mx-4 mb-6 flex gap-1 overflow-x-auto scroll-px-4 px-4 pb-1 [scrollbar-width:none] [mask-image:linear-gradient(to_right,transparent,#000_16px,#000_calc(100%-28px),transparent)] sm:mx-0 sm:px-0 sm:[mask-image:none] [&::-webkit-scrollbar]:hidden"
+    >
+      <ScrollActiveIntoView />
       {items.map((t) => {
         const on = t.key === current;
         return (

@@ -56,10 +56,10 @@ export default async function Expediente({
         actions={
           <>
             <DiscreetToggle />
-            <Link href={`/admin/agenda/nueva?paciente=${id}`} className={btn('secondary')}>
+            <Link href={`/admin/agenda/nueva?paciente=${id}`} className={btn('secondary', 'md', 'max-sm:flex-1 max-sm:px-3')}>
               Agendar cita
             </Link>
-            <Link href={`${base}/registros/nuevo`} className={btn('primary')}>
+            <Link href={`${base}/registros/nuevo`} className={btn('primary', 'md', 'max-sm:flex-1 max-sm:px-3')}>
               Nuevo registro
             </Link>
           </>

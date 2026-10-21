@@ -4,6 +4,7 @@ import { PAYMENT_METHOD, PAYMENT_STATUS } from '@/lib/labels';
 import { addDays, endOfMonth, fmtDate, isDateKey, money, startOfMonth, todayKey } from '@/lib/format';
 import { ActionForm } from '@/components/forms';
 import { Badge, btn, EmptyState, PageHeader, Section } from '@/components/ui';
+import { Icon } from '@/components/icons';
 import { confirmarPago } from './actions';
 
 export const metadata = { title: 'Pagos' };
@@ -92,43 +93,50 @@ export default async function PagosPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader title="Pagos" subtitle={`Del ${fmtDate(from + 'T18:00:00Z')} al ${fmtDate(to + 'T18:00:00Z')}`} />
 
-      <div className="no-print mb-6 flex flex-wrap items-end gap-3">
-        <nav aria-label="Periodo" className="inline-flex rounded-full border border-linea-fuerte bg-superficie p-1">
+      <div className="no-print mb-6 flex flex-wrap items-start gap-3">
+        <nav aria-label="Periodo" className="grid w-full grid-cols-3 rounded-full border border-linea-fuerte bg-superficie p-1 sm:inline-grid sm:w-auto">
           {PRESETS.map(([k, v]) => (
             <Link
               key={k}
               href={`/admin/pagos?periodo=${k}`}
               aria-current={preset === k ? 'true' : undefined}
-              className={`inline-flex min-h-9 items-center rounded-full px-4 text-[14px] ${preset === k ? 'bg-tinta text-hueso' : 'hover:bg-[rgb(37_38_44/0.06)]'}`}
+              className={`inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full px-3 text-[14px] transition-colors duration-200 sm:min-h-9 sm:px-4 ${preset === k ? 'bg-tinta text-hueso' : 'hover:bg-[rgb(37_38_44/0.06)]'}`}
             >
               {v}
             </Link>
           ))}
         </nav>
-        <form className="flex flex-wrap items-end gap-2">
-          <input type="hidden" name="periodo" value="personalizado" />
-          <div className="flex flex-col gap-1">
-            <label htmlFor="desde" className="text-[13px] text-tenue">
-              Desde
-            </label>
-            <input id="desde" name="desde" type="date" className="field min-h-10 py-1.5" defaultValue={from} max={t} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="hasta" className="text-[13px] text-tenue">
-              Hasta
-            </label>
-            <input id="hasta" name="hasta" type="date" className="field min-h-10 py-1.5" defaultValue={to} max={t} />
-          </div>
-          <button type="submit" className={btn('secondary', 'sm', 'min-h-10')}>
-            Ver periodo
-          </button>
-        </form>
+        <details className="group w-full sm:w-auto" open={preset === 'personalizado'}>
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full px-3 text-[14.5px] text-tinta hover:bg-[rgb(37_38_44/0.06)] sm:min-h-10 [&::-webkit-details-marker]:hidden">
+            <Icon name="agenda" className="size-5 text-tenue" />
+            {preset === 'personalizado' ? 'Periodo elegido' : 'Elegir fechas'}
+            <Icon name="flecha" className="size-4 text-tenue transition-transform group-open:rotate-90" />
+          </summary>
+          <form className="mt-2 grid grid-cols-2 items-end gap-2 sm:flex">
+            <input type="hidden" name="periodo" value="personalizado" />
+            <div className="flex min-w-0 flex-col gap-1">
+              <label htmlFor="desde" className="text-[13px] text-tenue">
+                Desde
+              </label>
+              <input id="desde" name="desde" type="date" className="field min-h-11 py-1.5" defaultValue={from} max={t} />
+            </div>
+            <div className="flex min-w-0 flex-col gap-1">
+              <label htmlFor="hasta" className="text-[13px] text-tenue">
+                Hasta
+              </label>
+              <input id="hasta" name="hasta" type="date" className="field min-h-11 py-1.5" defaultValue={to} max={t} />
+            </div>
+            <button type="submit" className={btn('secondary', 'sm', 'col-span-2 min-h-11')}>
+              Ver periodo
+            </button>
+          </form>
+        </details>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="grid min-w-0 grid-cols-1 content-start gap-6">
-          <section aria-label="Resumen del periodo" className="panel grid gap-5 p-5 sm:grid-cols-[1.3fr_1fr_1fr] sm:p-7">
-            <div>
+          <section aria-label="Resumen del periodo" className="panel grid grid-cols-2 gap-5 p-5 sm:grid-cols-[1.3fr_1fr_1fr] sm:p-7">
+            <div className="col-span-2 sm:col-span-1">
               <p className="text-[14px] text-tenue">Ingresos recibidos</p>
               <p className="display text-[42px] leading-none tabular-nums">{money(s?.income_cents)}</p>
               <p className="mt-1 text-[13px] text-tenue">{s?.payments_count ?? 0} pagos confirmados</p>
@@ -141,7 +149,7 @@ export default async function PagosPage({ searchParams }: { searchParams: Promis
               <p className="text-[14px] text-tenue">Por confirmar</p>
               <p className="text-[20px] tabular-nums">{money(s?.unconfirmed_cents)}</p>
             </div>
-            <p className="text-[13px] text-tenue sm:col-span-3">Solo cuentan como ingreso los pagos recibidos y confirmados, por su fecha de pago.</p>
+            <p className="col-span-2 text-[13px] text-tenue sm:col-span-3">Solo cuentan como ingreso los pagos recibidos y confirmados, por su fecha de pago.</p>
           </section>
 
           <Section title="Ingresos por mes">
@@ -165,7 +173,29 @@ export default async function PagosPage({ searchParams }: { searchParams: Promis
 
           <Section title="Pagos del periodo">
             {(periodPays ?? []).length ? (
-              <div className="overflow-x-auto">
+              <>
+              <ul className="-mx-1 divide-y divide-linea md:hidden">
+                {((periodPays ?? []) as unknown as Pay[]).map((x) => {
+                  const st = PAYMENT_STATUS[x.status]!;
+                  return (
+                    <li key={x.id}>
+                      <Link href={`/admin/pacientes/${x.patient_id}?seccion=pagos`} className="flex min-h-16 items-center gap-3 rounded-xl px-1 py-2.5 active:bg-white">
+                        <span className="min-w-0 flex-1">
+                          <span className="line-clamp-2 text-[15.5px] leading-snug">{x.patient?.full_name}</span>
+                          <span className="block text-[13px] text-tenue">
+                            {fmtDate(x.paid_on + 'T18:00:00Z', { day: 'numeric', month: 'short' })} · {PAYMENT_METHOD[x.method]}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-right">
+                          <span className="block text-[16px] tabular-nums">{money(x.amount_cents)}</span>
+                          <span className={`text-[12.5px] ${x.status === 'por_confirmar' ? 'text-ocre-700' : 'text-salvia-700'}`}>{st.label}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-left text-[14.5px]">
                   <thead className="text-[13px] text-tenue">
                     <tr className="border-b border-linea">
@@ -202,6 +232,7 @@ export default async function PagosPage({ searchParams }: { searchParams: Promis
                   </tbody>
                 </table>
               </div>
+              </>
             ) : (
               <EmptyState title="Sin pagos en este periodo." />
             )}

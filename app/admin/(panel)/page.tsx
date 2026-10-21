@@ -4,7 +4,8 @@ import { APPT_SELECT, apptName, type ApptRow } from '@/lib/admin';
 import { addDays, dateKey, endOfMonth, fmtDate, fmtDayLong, fmtTime, money, MODALITY_LABEL, startOfMonth, todayKey, zonedToDate } from '@/lib/format';
 import { APPOINTMENT_STATUS } from '@/lib/labels';
 import { ApptLine } from '@/components/appt-line';
-import { Badge, btn, EmptyState } from '@/components/ui';
+import { Badge, btn, EmptyState, Fab } from '@/components/ui';
+import { Icon } from '@/components/icons';
 
 export const metadata = { title: 'Hoy' };
 
@@ -102,12 +103,15 @@ export default async function HoyPage({ searchParams }: { searchParams: Promise<
                 : `Tienes ${todayActive.length} sesiones hoy.`}
           </p>
         </div>
-        <form action="/admin/pacientes" role="search" className="flex w-full max-w-sm gap-2 sm:w-auto">
+        <form action="/admin/pacientes" role="search" className="flex w-full gap-2 sm:w-auto sm:max-w-sm">
           <label htmlFor="buscar" className="sr-only">
             Buscar expediente
           </label>
-          <input id="buscar" name="q" type="search" placeholder="Nombre o LS-0001" className="field" maxLength={80} />
-          <button type="submit" className={btn('secondary')}>
+          <span className="relative flex-1">
+            <Icon name="buscar" className="pointer-events-none absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-tenue" />
+            <input id="buscar" name="q" type="search" enterKeyHint="search" placeholder="Buscar paciente" className="field !pl-11" maxLength={80} />
+          </span>
+          <button type="submit" className={btn('secondary', 'md', 'max-sm:hidden')}>
             Buscar
           </button>
         </form>
@@ -293,8 +297,8 @@ export default async function HoyPage({ searchParams }: { searchParams: Promise<
             </dl>
           </section>
 
-          {/* Accesos */}
-          <section aria-label="Accesos rápidos" className="flex flex-wrap gap-2">
+          {/* Accesos (en el celular, «Agendar cita» es el botón flotante) */}
+          <section aria-label="Accesos rápidos" className="flex flex-wrap gap-2 max-md:[&>a:last-child]:hidden">
             <Link href="/admin/pacientes/nuevo" className={btn('primary')}>
               Registrar paciente
             </Link>
@@ -333,6 +337,7 @@ export default async function HoyPage({ searchParams }: { searchParams: Promise<
           )}
         </div>
       </div>
+      <Fab href="/admin/agenda/nueva" label="Agendar cita" />
     </div>
   );
 }

@@ -21,19 +21,20 @@ import {
   publicarDocumento,
 } from './actions';
 import { DosPasos } from './dos-pasos';
+import { Icon } from '@/components/icons';
 
 export const metadata = { title: 'Configuración' };
 
-const SECTIONS: Array<[string, string]> = [
-  ['reservas', 'Agenda en línea'],
-  ['servicios', 'Servicios y precios'],
-  ['horario', 'Horario de atención'],
-  ['bloqueos', 'Días no disponibles'],
-  ['perfil', 'Perfil público y contacto'],
-  ['notificaciones', 'Notificaciones'],
-  ['legal', 'Aviso de privacidad y consentimiento'],
-  ['seguridad', 'Seguridad'],
-  ['datos', 'Datos y privacidad'],
+const SECTIONS: Array<[string, string, string]> = [
+  ['reservas', 'Agenda en línea', 'Recibir solicitudes y reglas de la agenda'],
+  ['servicios', 'Servicios y precios', 'Tipos de sesión, duración y precio'],
+  ['horario', 'Horario de atención', 'Días y horas en que atiendes'],
+  ['bloqueos', 'Días no disponibles', 'Vacaciones, cursos y días libres'],
+  ['perfil', 'Perfil público y contacto', 'Lo que se muestra en tu página'],
+  ['notificaciones', 'Notificaciones', 'Confirmaciones y recordatorios'],
+  ['legal', 'Aviso de privacidad y consentimiento', 'Documentos que aceptan tus pacientes'],
+  ['seguridad', 'Seguridad', 'Contraseña y verificación en dos pasos'],
+  ['datos', 'Datos y privacidad', 'Cómo se protege y conserva la información'],
 ];
 
 type Settings = Record<string, unknown> & {
@@ -48,24 +49,53 @@ type Settings = Record<string, unknown> & {
 export default async function ConfigPage({ searchParams }: { searchParams: Promise<{ seccion?: string }> }) {
   const { supabase, mfaEnabled } = await requireAdmin();
   const { seccion } = await searchParams;
-  const current = SECTIONS.some(([k]) => k === seccion) ? seccion! : 'reservas';
+  const explicit = SECTIONS.some(([k]) => k === seccion);
+  const current = explicit ? seccion! : 'reservas';
   const { data } = await supabase.from('practice_settings').select('*').single();
   const s = data as Settings;
 
   return (
     <>
-      <PageHeader title="Configuración" />
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[230px_minmax(0,1fr)]">
+      {/* Celular: «Configuración» es una lista de secciones; cada una se abre aparte. */}
+      <div className={explicit ? 'hidden lg:block' : ''}>
+        <PageHeader title="Configuración" />
+      </div>
+      {explicit && (
+        <Link href="/admin/configuracion" className="mb-3 inline-flex min-h-11 items-center gap-1 text-[15px] text-tenue lg:hidden">
+          <Icon name="atras" className="size-5" /> Configuración
+        </Link>
+      )}
+      {!explicit && (
+        <nav aria-label="Secciones de configuración" className="lg:hidden">
+          <ul className="panel divide-y divide-linea overflow-hidden">
+            {SECTIONS.map(([k, v, d]) => (
+              <li key={k}>
+                <Link href={`/admin/configuracion?seccion=${k}`} className="flex min-h-[68px] items-center gap-3 px-4 py-3 transition-colors active:bg-white">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[16px] leading-snug">{v}</span>
+                    <span className="block text-[13.5px] text-tenue">
+                      {k === 'reservas' ? (s.booking_enabled ? 'Recibiendo solicitudes' : 'Pausada: no recibe solicitudes') : d}
+                    </span>
+                  </span>
+                  {k === 'reservas' && <span aria-hidden className={`size-2 rounded-full ${s.booking_enabled ? 'bg-salvia-700' : 'bg-ocre-700'}`} />}
+                  <Icon name="flecha" className="size-4 text-tenue/70" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+      <div className={`grid grid-cols-1 gap-8 lg:grid-cols-[230px_minmax(0,1fr)] ${explicit ? '' : 'max-lg:hidden'}`}>
         <nav
           aria-label="Secciones de configuración"
-          className="no-print -mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:sticky lg:top-8 lg:mx-0 lg:flex-col lg:self-start lg:overflow-visible lg:px-0"
+          className="no-print hidden lg:sticky lg:top-8 lg:flex lg:flex-col lg:gap-1 lg:self-start"
         >
           {SECTIONS.map(([k, v]) => (
             <Link
               key={k}
               href={`/admin/configuracion?seccion=${k}`}
               aria-current={current === k ? 'page' : undefined}
-              className={`flex min-h-10 shrink-0 items-center rounded-full px-4 text-[14.5px] transition-colors lg:rounded-xl ${current === k ? 'bg-tinta text-hueso' : 'hover:bg-[rgb(37_38_44/0.06)]'}`}
+              className={`flex min-h-10 shrink-0 items-center rounded-xl px-4 text-[14.5px] transition-colors ${current === k ? 'bg-tinta text-hueso' : 'hover:bg-[rgb(37_38_44/0.06)]'}`}
             >
               {v}
             </Link>
@@ -251,9 +281,17 @@ export default async function ConfigPage({ searchParams }: { searchParams: Promi
         className="grid gap-4"
       >
         {editing && <input type="hidden" name="id" value={v.id as string} />}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Nombre" name="nombre" required maxLength={80} defaultValue={(v.name as string) ?? ''} placeholder="Ej. Sesión individual" />
-          <Select label="Modalidad" name="modalidad" defaultValue={(v.modality as string) ?? 'en_linea'}>
+        <div className="grid grid-cols-2 gap-4">
+          <Field
+            label="Nombre"
+            name="nombre"
+            required
+            maxLength={80}
+            defaultValue={(v.name as string) ?? ''}
+            placeholder="Ej. Sesión individual"
+            className="col-span-2 sm:col-span-1"
+          />
+          <Select label="Modalidad" name="modalidad" defaultValue={(v.modality as string) ?? 'en_linea'} className="col-span-2 sm:col-span-1">
             <option value="en_linea">En línea</option>
             <option value="presencial">Presencial</option>
           </Select>
@@ -337,8 +375,8 @@ export default async function ConfigPage({ searchParams }: { searchParams: Promi
         </Section>
         <Section title="Agregar franja">
           <ActionForm action={agregarFranja} submitLabel="Agregar">
-            <div className="grid gap-4 sm:grid-cols-4 sm:items-end">
-              <Select label="Día" name="dia" defaultValue="1">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:items-end">
+              <Select label="Día" name="dia" defaultValue="1" className="col-span-2 sm:col-span-1">
                 {order.map((d) => (
                   <option key={d} value={d}>
                     {WEEKDAYS[d]}
@@ -347,7 +385,7 @@ export default async function ConfigPage({ searchParams }: { searchParams: Promi
               </Select>
               <Field label="Desde" name="inicio" type="time" required defaultValue="09:00" step={300} />
               <Field label="Hasta" name="fin" type="time" required defaultValue="13:00" step={300} />
-              <Select label="Modalidad" name="modalidad" defaultValue="">
+              <Select label="Modalidad" name="modalidad" defaultValue="" className="col-span-2 sm:col-span-1">
                 <option value="">Cualquiera</option>
                 <option value="en_linea">Solo en línea</option>
                 <option value="presencial">Solo presencial</option>

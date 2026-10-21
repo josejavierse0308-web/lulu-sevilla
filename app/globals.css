@@ -40,7 +40,9 @@
   html {
     background: var(--color-hueso);
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
     color-scheme: light;
+    scroll-behavior: smooth;
   }
   body {
     background: var(--color-hueso);
@@ -187,8 +189,16 @@
   transition: filter 0.25s;
 }
 [data-discreto] .clinico:hover,
+[data-discreto] .clinico:active,
 [data-discreto] .clinico:focus-within {
   filter: none;
+}
+/* En pantallas táctiles no hay cursor: se lee manteniendo el dedo encima. */
+@media (hover: none) {
+  [data-discreto] .clinico {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
 }
 @media print {
   [data-discreto] .clinico {

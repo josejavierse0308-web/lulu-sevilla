@@ -82,13 +82,18 @@ export function BottomNav({ items }: { items: NavItem[] }) {
             <Link
               href={it.href}
               aria-current={on ? 'page' : undefined}
-              className={`relative flex min-h-[58px] flex-col items-center justify-center gap-0.5 text-[11.5px] ${on ? 'text-tinta' : 'text-tenue'}`}
+              className={`relative flex min-h-[60px] flex-col items-center justify-center gap-0.5 text-[12px] transition-colors active:text-tinta ${on ? 'font-medium text-tinta' : 'text-tenue'}`}
             >
-              <span className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${on ? 'bg-lavanda' : ''}`}>
+              <span className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-300 ${on ? 'bg-lavanda' : ''}`}>
                 <Icon name={it.icon} />
               </span>
               {it.label}
-              {!!it.count && <span className="absolute right-[calc(50%-24px)] top-1.5 size-2 rounded-full bg-ocre-700" aria-label={`${it.count} pendientes`} />}
+              {!!it.count && (
+                <span className="absolute left-[calc(50%+6px)] top-1 min-w-[18px] rounded-full bg-ocre-700 px-1 text-center text-[11px] font-medium leading-[18px] text-white ring-2 ring-hueso">
+                  {it.count > 9 ? '9+' : it.count}
+                  <span className="sr-only"> por confirmar</span>
+                </span>
+              )}
             </Link>
           </li>
         );

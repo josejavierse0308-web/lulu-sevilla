@@ -6,7 +6,7 @@ import { APPOINTMENT_STATUS, CHARGE_STATE, CONTACT_PREF, NOTIFICATION_KIND, NOTI
 import { dateKey, fmtDateTime, fmtDayLong, fmtTime, money, MODALITY_LABEL, minutesLabel } from '@/lib/format';
 import { renderTemplate } from '@/lib/templates';
 import { manageUrl } from '@/lib/tokens';
-import { Badge, btn, KeyValue, Notice, PageHeader, Section } from '@/components/ui';
+import { Badge, btn, ContactActions, KeyValue, Notice, PageHeader, Section } from '@/components/ui';
 import { ActionForm, Field, Select, TextArea } from '@/components/forms';
 import { cambiarEstado, cancelarCita, confirmarCita, guardarLugar, reprogramarCita } from '../actions';
 import { SlotPicker } from '../slot-picker';
@@ -106,10 +106,13 @@ export default async function CitaDetalle({ params }: { params: Promise<{ id: st
           </>
         }
         subtitle={
-          <span className="flex flex-wrap items-center gap-3">
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="w-full text-[17px] text-tinta">{name}</span>
             <Badge tone={st.tone}>{st.label}</Badge>
             <span>
-              {a.service?.name} · {MODALITY_LABEL[a.modality]} · {minutesLabel(a.service?.duration_min ?? 50)}
+              {a.service?.name}
+              {a.service?.name.toLowerCase().includes(MODALITY_LABEL[a.modality]!.toLowerCase()) ? '' : ` · ${MODALITY_LABEL[a.modality]}`} ·{' '}
+              {minutesLabel(a.service?.duration_min ?? 50)}
             </span>
           </span>
         }
@@ -121,6 +124,8 @@ export default async function CitaDetalle({ params }: { params: Promise<{ id: st
           ) : undefined
         }
       />
+
+      <ContactActions phone={phone} whatsapp={wa} email={email} className="-mt-2 mb-6 lg:hidden" />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="grid min-w-0 grid-cols-1 content-start gap-6">
@@ -313,8 +318,22 @@ export default async function CitaDetalle({ params }: { params: Promise<{ id: st
                   ),
                 ],
                 ['Expediente', a.patient?.internal_code ?? 'Sin vincular'],
-                ['Teléfono', phone],
-                ['Correo', email],
+                [
+                  'Teléfono',
+                  phone ? (
+                    <a key="t" className="link" href={`tel:${phone.replace(/[^\d+]/g, '')}`}>
+                      {phone}
+                    </a>
+                  ) : null,
+                ],
+                [
+                  'Correo',
+                  email ? (
+                    <a key="e" className="link" href={`mailto:${email}`}>
+                      {email}
+                    </a>
+                  ) : null,
+                ],
                 ['Prefiere', CONTACT_PREF[a.patient?.preferred_contact ?? a.requester_contact_pref ?? ''] ?? null],
               ]}
             />

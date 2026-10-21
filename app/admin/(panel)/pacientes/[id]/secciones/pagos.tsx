@@ -49,8 +49,8 @@ export async function Pagos({ patient: p }: { patient: Patient }) {
 
   return (
     <div className="grid gap-6">
-      <section aria-label="Saldo" className="panel grid gap-4 p-5 sm:grid-cols-4 sm:p-6">
-        <div>
+      <section aria-label="Saldo" className="panel grid grid-cols-3 gap-x-3 gap-y-4 p-5 sm:grid-cols-4 sm:p-6">
+        <div className="col-span-3 sm:col-span-1">
           <p className="text-[13.5px] text-tenue">Saldo</p>
           <p className={`display text-[34px] tabular-nums ${balance > 0 ? 'text-ocre-700' : ''}`}>
             {balance < 0 ? `A favor ${money(-balance)}` : money(balance)}
@@ -68,7 +68,7 @@ export async function Pagos({ patient: p }: { patient: Patient }) {
           <p className="text-[13.5px] text-tenue">Por confirmar</p>
           <p className="text-[18px] tabular-nums">{money(Number(bal?.unconfirmed_cents ?? 0))}</p>
         </div>
-        <p className="text-[13.5px] text-tenue sm:col-span-4">
+        <p className="col-span-3 text-[13.5px] text-tenue sm:col-span-4">
           Precio por sesión: {p.session_price_cents != null ? `${money(p.session_price_cents)} (propio de este paciente)` : 'el del tipo de sesión'} ·{' '}
           <Link className="link" href={`/admin/pacientes/${p.id}/editar`}>
             cambiar
@@ -209,7 +209,8 @@ export async function Pagos({ patient: p }: { patient: Patient }) {
           </Section>
         </div>
 
-        <div className="grid min-w-0 grid-cols-1 content-start gap-6">
+        {/* En el celular, registrar un pago es lo primero; el historial va después. */}
+        <div className="order-first grid min-w-0 grid-cols-1 content-start gap-6 lg:order-none">
           <Section
             title="Registrar pago"
             description="Registra solo dinero que ya recibiste. Si aún no lo verificas (por ejemplo, una transferencia), márcalo como por confirmar."
@@ -224,7 +225,7 @@ export async function Pagos({ patient: p }: { patient: Patient }) {
                 ))}
                 <option value="">Anticipo / a cuenta (sin cargo)</option>
               </Select>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Field label="Monto (MXN)" name="monto" inputMode="decimal" required defaultValue={open[0] ? String(open[0].pending_cents / 100) : ''} />
                 <Field label="Fecha de pago" name="fecha" type="date" required max={todayKey()} defaultValue={todayKey()} />
               </div>
@@ -244,22 +245,31 @@ export async function Pagos({ patient: p }: { patient: Patient }) {
             </ActionForm>
           </Section>
 
-          <Section title="Cargo manual">
-            <ActionForm action={crearCargo} submitLabel="Agregar cargo" submitVariant="secondary" className="grid gap-4">
+          <details className="panel group p-5 sm:p-7">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+              <span>
+                <span className="display block text-[28px]">Cargo manual</span>
+                <span className="text-[14px] text-tenue">Evaluaciones, informes u otros conceptos.</span>
+              </span>
+              <span aria-hidden className="text-[22px] transition-transform group-open:rotate-45">
+                +
+              </span>
+            </summary>
+            <ActionForm action={crearCargo} submitLabel="Agregar cargo" submitVariant="secondary" className="mt-5 grid gap-4">
               <input type="hidden" name="paciente" value={p.id} />
               <Field label="Concepto" name="concepto" required maxLength={140} placeholder="Ej. Evaluación, informe, material" />
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Field label="Monto (MXN)" name="monto" inputMode="decimal" required />
                 <Field label="Fecha" name="fecha" type="date" required defaultValue={todayKey()} />
               </div>
             </ActionForm>
-            <p className="mt-4 text-[13.5px] text-tenue">
-              Este panel es de control administrativo: no procesa cobros con tarjeta ni guarda datos bancarios.{' '}
-              <Link className="link" href="/admin/pagos">
-                Ver resumen general
-              </Link>
-            </p>
-          </Section>
+          </details>
+          <p className="px-1 text-[13.5px] text-tenue">
+            Este panel es de control administrativo: no procesa cobros con tarjeta ni guarda datos bancarios.{' '}
+            <Link className="link" href="/admin/pagos">
+              Ver resumen general
+            </Link>
+          </p>
         </div>
       </div>
     </div>

@@ -3,7 +3,8 @@ import { requireAdmin } from '@/lib/auth';
 import { CONSENT_METHOD, CONTACT_PREF } from '@/lib/labels';
 import { fmtDate, fmtDateTime, fmtTime, money, MODALITY_LABEL } from '@/lib/format';
 import { ActionForm, Field, Select } from '@/components/forms';
-import { Badge, btn, KeyValue, Notice, Section } from '@/components/ui';
+import { Badge, btn, ContactActions, KeyValue, Notice, Section } from '@/components/ui';
+import { waNumber } from '@/lib/admin';
 import { registrarConsentimiento, revocarConsentimiento } from '../../actions';
 import type { Patient } from '@/lib/admin-types';
 
@@ -37,6 +38,7 @@ export async function Resumen({ patient: p }: { patient: Patient }) {
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <ContactActions phone={p.phone} whatsapp={waNumber(p.phone)} email={p.email} className="order-first lg:hidden" />
       <div className="grid min-w-0 grid-cols-1 content-start gap-6">
         <Section
           title="Datos generales"
@@ -54,8 +56,22 @@ export async function Resumen({ patient: p }: { patient: Patient }) {
                   {p.internal_code}
                 </span>,
               ],
-              ['Teléfono', p.phone],
-              ['Correo', p.email],
+              [
+                'Teléfono',
+                p.phone ? (
+                  <a key="t" className="link" href={`tel:${p.phone.replace(/[^\d+]/g, '')}`}>
+                    {p.phone}
+                  </a>
+                ) : null,
+              ],
+              [
+                'Correo',
+                p.email ? (
+                  <a key="e" className="link" href={`mailto:${p.email}`}>
+                    {p.email}
+                  </a>
+                ) : null,
+              ],
               ['Prefiere contacto por', p.preferred_contact ? CONTACT_PREF[p.preferred_contact] : null],
               ['Fecha de nacimiento', p.birth_date ? `${fmtDate(p.birth_date + 'T12:00:00Z')} · ${age(p.birth_date)} años` : null],
               [
@@ -160,7 +176,8 @@ export async function Resumen({ patient: p }: { patient: Patient }) {
         </Section>
       </div>
 
-      <div className="grid min-w-0 grid-cols-1 content-start gap-6">
+      {/* En el celular esta columna (próxima cita, saldo) va primero. */}
+      <div className="order-first grid min-w-0 grid-cols-1 content-start gap-6 lg:order-none">
         <Section title="Seguimiento">
           <KeyValue
             items={[

@@ -3,7 +3,8 @@ import { requireAdmin } from '@/lib/auth';
 import { APPT_SELECT, apptName, type ApptRow } from '@/lib/admin';
 import { APPOINTMENT_STATUS, type Tone } from '@/lib/labels';
 import { addDays, dateKey, endOfMonth, fmtDate, fmtTime, isDateKey, startOfMonth, startOfWeek, todayKey, zonedToDate, MODALITY_LABEL } from '@/lib/format';
-import { Badge, btn, EmptyState, PageHeader } from '@/components/ui';
+import { Badge, btn, EmptyState, Fab, PageHeader } from '@/components/ui';
+import { Icon } from '@/components/icons';
 import { ApptLine } from '@/components/appt-line';
 
 export const metadata = { title: 'Agenda' };
@@ -94,6 +95,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
             {pendingCount > 0 && <> · {pendingCount} por confirmar</>}
           </>
         }
+        actionsClassName="max-md:hidden"
         actions={
           <Link href={`/admin/agenda/nueva?fecha=${day}`} className={btn('primary')}>
             Agendar cita
@@ -102,39 +104,41 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
       />
 
       <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div role="group" aria-label="Vista" className="inline-flex rounded-full border border-linea-fuerte bg-superficie p-1">
+        <div role="group" aria-label="Vista" className="grid w-full grid-cols-3 rounded-full border border-linea-fuerte bg-superficie p-1 sm:inline-grid sm:w-auto">
           {(['dia', 'semana', 'mes'] as const).map((v) => (
             <Link
               key={v}
               href={`/admin/agenda?${new URLSearchParams({ vista: v, fecha: day, ...(showCancelled ? { canceladas: '1' } : {}) })}`}
               aria-current={view === v ? 'page' : undefined}
-              className={`inline-flex min-h-9 items-center rounded-full px-4 text-[14px] transition-colors ${view === v ? 'bg-tinta text-hueso' : 'hover:bg-[rgb(37_38_44/0.06)]'}`}
+              className={`inline-flex min-h-10 items-center justify-center rounded-full px-4 text-[14.5px] transition-colors duration-200 sm:min-h-9 sm:text-[14px] ${view === v ? 'bg-tinta text-hueso' : 'hover:bg-[rgb(37_38_44/0.06)]'}`}
             >
               {v === 'dia' ? 'Día' : v === 'semana' ? 'Semana' : 'Mes'}
             </Link>
           ))}
         </div>
-        <div className="flex items-center gap-1">
-          <Link href={href({ fecha: prev })} className={btn('quiet', 'sm')} aria-label="Anterior">
-            ←
+        <div className="flex w-full items-center gap-1 sm:w-auto">
+          <Link href={href({ fecha: prev })} className={btn('quiet', 'sm', 'size-11 !px-0 sm:size-9')} aria-label="Anterior">
+            <Icon name="atras" />
           </Link>
-          <Link href={href({ fecha: todayKey() })} className={btn('secondary', 'sm')}>
+          <Link href={href({ fecha: todayKey() })} className={btn('secondary', 'sm', 'min-h-11 sm:min-h-9')}>
             Hoy
           </Link>
-          <Link href={href({ fecha: next })} className={btn('quiet', 'sm')} aria-label="Siguiente">
-            →
+          <Link href={href({ fecha: next })} className={btn('quiet', 'sm', 'size-11 !px-0 sm:size-9')} aria-label="Siguiente">
+            <Icon name="flecha" />
           </Link>
-          <Link href={href({ canceladas: showCancelled ? '0' : '1' })} className={btn('quiet', 'sm', 'ml-2')}>
+          <Link href={href({ canceladas: showCancelled ? '0' : '1' })} className={btn('quiet', 'sm', 'ml-auto min-h-11 sm:ml-2 sm:min-h-9')}>
             {showCancelled ? 'Ocultar canceladas' : 'Ver canceladas'}
           </Link>
         </div>
       </div>
 
+      {view === 'semana' && <WeekStrip from={from} byDay={byDay} />}
+
       {view === 'mes' ? (
         <MonthGrid from={from} to={to} month={day.slice(0, 7)} byDay={byDay} timeOff={timeOff} />
       ) : (
         <>
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <TimeGrid
               days={Array.from({ length: view === 'dia' ? 1 : 7 }, (_, i) => addDays(from, i))}
               byDay={byDay}
@@ -143,7 +147,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
               endH={endH}
             />
           </div>
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <DayList days={Array.from({ length: view === 'dia' ? 1 : 7 }, (_, i) => addDays(from, i))} byDay={byDay} timeOff={timeOff} />
           </div>
         </>
@@ -156,7 +160,39 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
           </li>
         ))}
       </ul>
+      <Fab href={`/admin/agenda/nueva?fecha=${day}`} label="Agendar cita" />
     </>
+  );
+}
+
+/** Celular: los 7 días de la semana en una fila; cada uno lleva a su lista. */
+function WeekStrip({ from, byDay }: { from: string; byDay: Map<string, ApptRow[]> }) {
+  const today = todayKey();
+  return (
+    <ol className="no-print sticky top-[57px] z-20 -mx-4 mb-5 grid grid-cols-7 gap-1 border-b border-linea bg-hueso/90 px-3 pb-2.5 pt-1 backdrop-blur-md sm:-mx-8 sm:px-6 md:top-0 md:-mx-12 md:px-10 lg:hidden" aria-label="Días de la semana">
+      {Array.from({ length: 7 }, (_, i) => addDays(from, i)).map((d) => {
+        const items = (byDay.get(d) ?? []).filter((a) => a.status !== 'cancelada');
+        const pend = items.some((a) => a.status === 'pendiente');
+        const isToday = d === today;
+        return (
+          <li key={d}>
+            <a
+              href={`#d-${d}`}
+              className={`flex min-h-[62px] flex-col items-center justify-center gap-0.5 rounded-2xl transition-colors active:bg-white ${isToday ? 'bg-tinta text-hueso' : 'hover:bg-white/70'}`}
+              aria-label={`${fmtDate(noon(d), { weekday: 'long', day: 'numeric' })}: ${items.length} citas`}
+            >
+              <span className={`text-[11.5px] capitalize ${isToday ? 'text-hueso/75' : 'text-tenue'}`}>{fmtDate(noon(d), { weekday: 'short' }).replace('.', '').slice(0, 3)}</span>
+              <span className="display text-[22px] leading-none tabular-nums">{fmtDate(noon(d), { day: 'numeric' })}</span>
+              <span className="flex h-1.5 gap-0.5" aria-hidden>
+                {items.slice(0, 3).map((a) => (
+                  <span key={a.id} className={`size-1.5 rounded-full ${a.status === 'pendiente' ? 'bg-ocre-700' : isToday ? 'bg-lavanda' : 'bg-lavanda-700'} ${pend && a.status !== 'pendiente' ? 'opacity-70' : ''}`} />
+                ))}
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -253,25 +289,27 @@ function DayList({ days, byDay, timeOff }: { days: string[]; byDay: Map<string, 
       </EmptyState>
     );
   return (
-    <div className="grid grid-cols-1 gap-5">
+    <div className="grid grid-cols-1 gap-6">
       {days.map((d) => {
         const items = byDay.get(d) ?? [];
         const offs = offsFor(d, timeOff);
+        const isToday = d === todayKey();
         return (
-          <section key={d} aria-labelledby={`d-${d}`} className="min-w-0">
-            <h2 id={`d-${d}`} className="mb-2 flex items-baseline gap-2">
-              <span className="display text-[24px] capitalize">{fmtDate(noon(d), { weekday: 'long' })}</span>
-              <span className="text-[14px] text-tenue">{fmtDate(noon(d), { day: 'numeric', month: 'long' })}</span>
+          <section key={d} id={`d-${d}`} aria-labelledby={`dh-${d}`} className="min-w-0 scroll-mt-[150px]">
+            <h2 id={`dh-${d}`} className={`flex items-baseline gap-2 ${items.length ? 'mb-2.5' : ''}`}>
+              <span className="display text-[25px] capitalize">{isToday ? 'Hoy' : fmtDate(noon(d), { weekday: 'long' })}</span>
+              <span className="text-[14px] text-tenue">
+                {isToday ? fmtDate(noon(d), { weekday: 'long', day: 'numeric', month: 'long' }) : fmtDate(noon(d), { day: 'numeric', month: 'long' })}
+              </span>
+              {!items.length && <span className="ml-auto text-[14px] text-tenue">Sin citas</span>}
             </h2>
-            {offs.length > 0 && <p className="mb-2 rounded-xl bg-[rgb(37_38_44/0.05)] px-3 py-2 text-[14px] text-tenue">No disponible en parte del día</p>}
-            {items.length ? (
-              <ul className="panel divide-y divide-linea">
+            {offs.length > 0 && <p className="mb-2 mt-2 rounded-xl bg-[rgb(37_38_44/0.05)] px-3 py-2 text-[14px] text-tenue">No disponible en parte del día</p>}
+            {items.length > 0 && (
+              <ul className="panel divide-y divide-linea overflow-hidden">
                 {items.map((a) => (
                   <ApptLine key={a.id} a={a} />
                 ))}
               </ul>
-            ) : (
-              <p className="text-[14px] text-tenue">Sin citas</p>
             )}
           </section>
         );

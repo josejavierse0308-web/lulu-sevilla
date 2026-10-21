@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth';
 import { cerrarSesion, cerrarSesionPorInactividad } from '../(acceso)/actions';
 import { BottomNav, SideNav, type NavItem } from './nav';
 import { IdleGuard } from './idle';
+import { MobileMenu } from './menu-movil';
 import { Toaster } from '@/components/toaster';
 
 export const dynamic = 'force-dynamic';
@@ -59,18 +60,18 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-linea bg-hueso/85 px-5 py-3 backdrop-blur-md md:hidden">
-        <Link href="/admin" className="display text-[22px] italic">
-          Lulu Sevilla
+      <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-linea bg-hueso/85 py-1.5 pl-4 pr-2 pt-[max(6px,env(safe-area-inset-top))] backdrop-blur-md md:hidden">
+        <Link href="/admin" className="flex min-h-11 items-center gap-2.5">
+          <span
+            aria-hidden
+            className="size-6 rounded-[46%_54%_52%_48%/50%_46%_54%_50%] bg-[radial-gradient(circle_at_36%_32%,#fff_0,#fcf5e7_28%,#e8dff4_68%,#cdc4e2_100%)] shadow-[0_0_12px_3px_rgb(255_248_232/0.8)]"
+          />
+          <span className="display text-[21px] italic">Lulu Sevilla</span>
         </Link>
-        <form action={cerrarSesion}>
-          <button type="submit" className="min-h-10 px-2 text-[14px] text-tenue">
-            Salir
-          </button>
-        </form>
+        <MobileMenu email={user.email ?? ''} logout={cerrarSesion} />
       </header>
 
-      <main id="contenido" className="min-w-0 px-5 pb-32 pt-8 sm:px-8 md:px-12 md:pb-16 md:pt-12">
+      <main id="contenido" className="min-w-0 px-4 pb-44 pt-6 sm:px-8 md:px-12 md:pb-16 md:pt-12">
         <div className="mx-auto max-w-[1120px]">{children}</div>
       </main>
 

@@ -4,6 +4,8 @@ export type ActionResult = {
   fieldErrors?: Record<string, string>;
   redirectTo?: string;
   resetForm?: boolean;
+  /** La acción ya devolvió la pantalla actualizada; no hace falta refrescar. */
+  revalidated?: boolean;
 } | null;
 
 export type FormAction = (prev: ActionResult, formData: FormData) => Promise<ActionResult>;

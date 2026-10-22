@@ -6,7 +6,7 @@ import { adminAction, must, optStr, str, uuid } from '@/lib/admin';
 import { fail, ok, type ActionResult } from '@/lib/action-result';
 import { isDateKey, parseMoneyToCents, todayKey } from '@/lib/format';
 import { newId } from '@/lib/tokens';
-import { getAdminContext } from '@/lib/auth';
+import { getVerifiedAdminContext } from '@/lib/auth';
 
 const PHONE = /^\+?[0-9][0-9 ()-]{6,19}$/;
 
@@ -202,7 +202,7 @@ export async function prepararSubida(patientId: string, mime: string, size: numb
   if (!/^[0-9a-f-]{36}$/i.test(patientId)) return { error: 'Expediente no válido.' };
   if (!ext) return { error: 'Solo se aceptan PDF, JPG o PNG.' };
   if (!(size > 0 && size <= 10 * 1024 * 1024)) return { error: 'El archivo debe pesar como máximo 10 MB.' };
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') return { error: 'Tu sesión expiró.' };
   const path = `patients/${patientId}/${newId()}.${ext}`;
   const { data, error } = await ctx.supabase.storage.from(BUCKET).createSignedUploadUrl(path);

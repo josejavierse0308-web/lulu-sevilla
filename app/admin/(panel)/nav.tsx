@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const I = {
@@ -71,6 +71,14 @@ export function SideNav({ items }: { items: NavItem[] }) {
   );
 }
 
+/** Se ilumina en cuanto se toca, sin esperar a que llegue la pantalla. */
+function NavPill({ on, children }: { on: boolean; children: React.ReactNode }) {
+  const { pending } = useLinkStatus();
+  return (
+    <span className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-200 ${on || pending ? 'bg-lavanda' : ''}`}>{children}</span>
+  );
+}
+
 export function BottomNav({ items }: { items: NavItem[] }) {
   const path = usePathname();
   return (
@@ -84,9 +92,9 @@ export function BottomNav({ items }: { items: NavItem[] }) {
               aria-current={on ? 'page' : undefined}
               className={`relative flex min-h-[60px] flex-col items-center justify-center gap-0.5 text-[12px] transition-colors active:text-tinta ${on ? 'font-medium text-tinta' : 'text-tenue'}`}
             >
-              <span className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-300 ${on ? 'bg-lavanda' : ''}`}>
+              <NavPill on={on}>
                 <Icon name={it.icon} />
-              </span>
+              </NavPill>
               {it.label}
               {!!it.count && (
                 <span className="absolute left-[calc(50%+6px)] top-1 min-w-[18px] rounded-full bg-ocre-700 px-1 text-center text-[11px] font-medium leading-[18px] text-white ring-2 ring-hueso">

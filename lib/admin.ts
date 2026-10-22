@@ -1,6 +1,7 @@
 import 'server-only';
+import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getAdminContext } from '@/lib/auth';
+import { getVerifiedAdminContext } from '@/lib/auth';
 import { friendlyError } from '@/lib/errors';
 import { fail, type ActionResult } from '@/lib/action-result';
 
@@ -9,12 +10,19 @@ import { fail, type ActionResult } from '@/lib/action-result';
  * (además de RLS) y convierte cualquier error en un mensaje claro.
  */
 export async function adminAction(fn: (supabase: SupabaseClient) => Promise<ActionResult>): Promise<ActionResult> {
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') {
     return { ok: false, message: 'Tu sesión expiró. Vuelve a iniciar sesión.', redirectTo: '/admin/ingresar' };
   }
   try {
-    return await fn(ctx.supabase);
+    const r = await fn(ctx.supabase);
+    // La respuesta de la acción ya trae la pantalla actualizada: el formulario
+    // no necesita pedirla otra vez (un solo viaje al servidor por botón).
+    if (r?.ok) {
+      revalidatePath('/admin', 'layout');
+      return { ...r, revalidated: true };
+    }
+    return r;
   } catch (e) {
     return fail(friendlyError(e));
   }

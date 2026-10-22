@@ -30,11 +30,13 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getUser();
+  // getClaims verifica la firma del token con la llave pública (sin viaje al
+  // servidor de autenticación) y lo renueva si ya expiró.
+  const { data } = await supabase.auth.getClaims();
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_ADMIN.some((p) => path === p || path.startsWith(p + '/'));
 
-  if (!data.user && !isPublic) {
+  if (!data?.claims?.sub && !isPublic) {
     const to = request.nextUrl.clone();
     to.pathname = '/admin/ingresar';
     to.search = '';

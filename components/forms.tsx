@@ -69,7 +69,7 @@ export function ActionForm({
     if (!state) return;
     if (state.ok && state.resetForm) formRef.current?.reset();
     if (state.redirectTo) router.push(state.redirectTo);
-    else if (state.ok) router.refresh();
+    else if (state.ok && !state.revalidated) router.refresh();
   }, [state, router]);
 
   // Se envía manualmente (sin la prop `action`) para que React no limpie el

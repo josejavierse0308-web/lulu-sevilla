@@ -7,7 +7,7 @@ import { fail, ok, type ActionResult } from '@/lib/action-result';
 import { manageTokenHash, newId } from '@/lib/tokens';
 import { isDateKey, zonedToDate } from '@/lib/format';
 import { processOutbox } from '@/lib/notifications';
-import { getAdminContext } from '@/lib/auth';
+import { getVerifiedAdminContext } from '@/lib/auth';
 
 function kickNotifications() {
   after(async () => {
@@ -148,7 +148,7 @@ export async function crearCita(_: ActionResult, fd: FormData): Promise<ActionRe
 
 /** Horarios libres para el selector del panel (incluye los que la página no ofrece por anticipación mínima). */
 export async function horariosLibres(serviceId: string, day: string, exclude?: string): Promise<{ slots: string[]; error?: string }> {
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') return { slots: [], error: 'Tu sesión expiró.' };
   if (!/^[0-9a-f-]{36}$/i.test(serviceId) || !isDateKey(day)) return { slots: [] };
   const { data, error } = await ctx.supabase.rpc('admin_available_slots', {

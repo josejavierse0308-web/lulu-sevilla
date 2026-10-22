@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAdminContext } from '@/lib/auth';
+import { getVerifiedAdminContext } from '@/lib/auth';
 import { UUID } from '@/lib/admin';
 
 export const dynamic = 'force-dynamic';
@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 /** Descarga: verifica la sesión, registra la descarga y redirige a una URL firmada de 60 s. */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string; docId: string }> }) {
   const { id, docId } = await params;
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') return NextResponse.redirect(new URL('/admin/ingresar', request.url));
   if (!UUID.test(id) || !UUID.test(docId)) return new NextResponse('No encontrado', { status: 404 });
 

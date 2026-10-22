@@ -7,7 +7,7 @@ import { fail, ok, type ActionResult } from '@/lib/action-result';
 import { isDateKey, parseMoneyToCents, zonedToDate } from '@/lib/format';
 import { templateIsValid } from '@/lib/templates';
 import { passwordProblems } from '@/lib/passwords';
-import { getAdminContext } from '@/lib/auth';
+import { getVerifiedAdminContext } from '@/lib/auth';
 
 const int = (fd: FormData, k: string) => {
   const n = Number(str(fd, k, 6));
@@ -285,7 +285,7 @@ export async function publicarDocumento(_: ActionResult, fd: FormData): Promise<
 
 // Seguridad --------------------------------------------------------------------
 export async function cambiarContrasena(_: ActionResult, fd: FormData): Promise<ActionResult> {
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') return { ok: false, message: 'Tu sesión expiró.', redirectTo: '/admin/ingresar' };
   const current = String(fd.get('actual') ?? '');
   const next = String(fd.get('nueva') ?? '');
@@ -302,14 +302,14 @@ export async function cambiarContrasena(_: ActionResult, fd: FormData): Promise<
 }
 
 export async function cerrarOtrasSesiones(_: ActionResult): Promise<ActionResult> {
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') return { ok: false, message: 'Tu sesión expiró.', redirectTo: '/admin/ingresar' };
   await ctx.supabase.auth.signOut({ scope: 'others' });
   return ok('Se cerraron las sesiones abiertas en otros dispositivos.');
 }
 
 export async function iniciarDosPasos(): Promise<{ factorId?: string; qr?: string; secret?: string; error?: string }> {
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') return { error: 'Tu sesión expiró.' };
   // Limpia intentos previos sin verificar.
   const { data: list } = await ctx.supabase.auth.mfa.listFactors();
@@ -320,7 +320,7 @@ export async function iniciarDosPasos(): Promise<{ factorId?: string; qr?: strin
 }
 
 export async function confirmarDosPasos(_: ActionResult, fd: FormData): Promise<ActionResult> {
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') return { ok: false, message: 'Tu sesión expiró.', redirectTo: '/admin/ingresar' };
   const factorId = str(fd, 'factor', 60);
   const code = str(fd, 'codigo', 8).replace(/\s/g, '');
@@ -331,7 +331,7 @@ export async function confirmarDosPasos(_: ActionResult, fd: FormData): Promise<
 }
 
 export async function desactivarDosPasos(_: ActionResult, fd: FormData): Promise<ActionResult> {
-  const ctx = await getAdminContext();
+  const ctx = await getVerifiedAdminContext();
   if (ctx.status !== 'ok') return { ok: false, message: 'Tu sesión expiró.', redirectTo: '/admin/ingresar' };
   const factorId = str(fd, 'factor', 60);
   const { error } = await ctx.supabase.auth.mfa.unenroll({ factorId });
